@@ -1,0 +1,114 @@
+---
+import { ViewTransitions } from 'astro:transitions';
+import Navigation from '../components/Navigation.astro';
+import '../styles/page.css';
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  subtitle?: string;
+}
+
+const { title, eyebrow, subtitle } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <ViewTransitions />
+  </head>
+  <body class="page">
+    <Navigation />
+    <main class="shell" transition:animate="fade">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light;
+    --page-bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --border-subtle: #e5e7eb;
+    --text-main: #111827;
+    --text-subtle: #6b7280;
+    --accent: #14b8a6;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+      sans-serif;
+  }
+
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--text-main);
+  }
+
+  .page {
+    min-height: 100vh;
+  }
+
+  .shell {
+    padding: 0;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 768px) {
+    .shell {
+      padding: 1rem;
+      max-width: calc(100% - 2rem);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .shell {
+      max-width: calc(1200px - 2rem);
+    }
+  }
+
+  /* Customize view transitions */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.2s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(root) {
+    animation-name: fade-out;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: fade-in;
+  }
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+</style>

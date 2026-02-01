@@ -1,0 +1,536 @@
+---
+import { fetchGraphQL } from '../../lib/graphql';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const GET_TOURNAMENT = `
+  query GetTournament($id: ID!) {
+    getTournament(id: $id) {
+      id
+      name
+      description
+      status
+      start_date
+      end_date
+      results {
+        id
+        position
+        points
+        player {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+
+interface Player {
+  id: string;
+  name: string;
+}
+
+interface Result {
+  id: string;
+  position: string | null;
+  points: number;
+  player: Player;
+}
+
+interface Tournament {
+  id: string;
+  name: string;
+  description?: string | null;
+  status: 'UPCOMING' | 'IN-PROGRESS' | 'COMPLETED';
+  start_date: string;
+  end_date: string;
+  results?: Result[] | null;
+}
+
+interface GetTournamentResponse {
+  getTournament: Tournament;
+}
+
+interface GetTournamentIdsResponse {
+  getAllTournaments: { id: string }[];
+}
+
+export async function getStaticPaths() {
+  const GET_TOURNAMENT_IDS = `
+    query GetAllTournamentsForPaths {
+      getAllTournaments {
+        id
+      }
+    }
+  `;
+
+  try {
+    const data = await fetchGraphQL<GetTournamentIdsResponse>(GET_TOURNAMENT_IDS);
+    const tournaments = data.getAllTournaments ?? [];
+
+    return tournaments.map((tournament) => ({
+      params: { id: tournament.id },
+    }));
+  } catch (error) {
+    console.error('Error fetching tournament paths:', error);
+    return [];
+  }
+}
+
+const { id } = Astro.params;
+
+let tournament: Tournament | null = null;
+let error: string | null = null;
+
+function formatDateRange(start: string, end: string): string {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return 'TBD';
+  }
+
+  const sameMonth = startDate.getMonth() === endDate.getMonth();
+  const sameYear = startDate.getFullYear() === endDate.getFullYear();
+
+  const monthFormatter = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+  });
+
+  const fullFormatter = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  if (sameMonth && sameYear) {
+    return `${monthFormatter.format(startDate)} ${startDate.getDate()}–${endDate.getDate()}, ${startDate.getFullYear()}`;
+  }
+
+  if (sameYear) {
+    return `${fullFormatter.format(startDate)} – ${monthFormatter.format(endDate)} ${endDate.getDate()}`;
+  }
+
+  return `${fullFormatter.format(startDate)} – ${fullFormatter.format(endDate)}`;
+}
+
+function mapStatus(status: Tournament['status']): {
+  label: string;
+  tone: 'upcoming' | 'in-progress' | 'completed';
+} {
+  switch (status) {
+    case 'UPCOMING':
+      return { label: 'Upcoming', tone: 'upcoming' };
+    case 'IN-PROGRESS':
+      return { label: 'In progress', tone: 'in-progress' };
+    case 'COMPLETED':
+    default:
+      return { label: 'Completed', tone: 'completed' };
+  }
+}
+
+try {
+  const data = await fetchGraphQL<GetTournamentResponse>(GET_TOURNAMENT, {
+    id,
+  });
+  tournament = data.getTournament ?? null;
+} catch (err) {
+  error = err instanceof Error ? err.message : 'Failed to load tournament.';
+}
+---
+
+<BaseLayout title={tournament ? tournament.name : 'Tournament'}>
+  <a href="/tournaments" class="back-button" aria-label="Back to tournaments">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <section class="card">
+        <header class="card-header">
+          <div class="card-header-main">
+            <p class="eyebrow">Tournament</p>
+            <h1 class="title">
+              {tournament ? tournament.name : 'Tournament details'}
+            </h1>
+            {tournament && (
+              <p class="subtitle">
+                {tournament.description || 'Overview and results for this tournament.'}
+              </p>
+            )}
+            {!tournament && !error && (
+              <p class="subtitle">Loading tournament…</p>
+            )}
+          </div>
+          {tournament && (
+            <div class="card-header-aside">
+              <span
+                class:list={{
+                  'chip': true,
+                  'chip-upcoming': mapStatus(tournament.status).tone === 'upcoming',
+                  'chip-in-progress': mapStatus(tournament.status).tone === 'in-progress',
+                  'chip-completed': mapStatus(tournament.status).tone === 'completed',
+                }}
+              >
+                {mapStatus(tournament.status).label}
+              </span>
+              <p class="dates">{formatDateRange(
+                tournament.start_date as unknown as string,
+                tournament.end_date as unknown as string,
+              )}</p>
+            </div>
+          )}
+        </header>
+
+        {error && (
+          <div class="state state-error">
+            <p>We couldn't load this tournament.</p>
+            <p class="state-detail">{error}</p>
+          </div>
+        )}
+
+        {!error && !tournament && (
+          <div class="state">
+            <p>Loading tournament…</p>
+          </div>
+        )}
+
+        {!error && tournament && (!tournament.results || tournament.results.length === 0) && (
+          <div class="empty-state">
+            <div class="empty-state-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path d="M9 12h6m-6 4h6" />
+              </svg>
+            </div>
+            <h2 class="empty-state-title">No results yet</h2>
+            <p class="empty-state-text">
+              Results will be displayed here once they're added to this tournament. Check back after the tournament concludes.
+            </p>
+          </div>
+        )}
+
+        {!error && tournament && tournament.results && tournament.results.length > 0 && (
+          <div class="table">
+            <div class="table-head">
+              <span class="col-pos">Pos</span>
+              <span class="col-player">Player</span>
+              <span class="col-points">Points</span>
+            </div>
+
+            <ul class="rows" aria-label="Tournament results">
+              {tournament.results.map((result) => (
+                <li class="row">
+                  <span class="col-pos">{result.position ?? '-'}</span>
+                  <div class="col-player">
+                    <div class="avatar" aria-hidden="true">
+                      {result.player?.name?.charAt(0).toUpperCase() ?? '?'}
+                    </div>
+                    <div class="player-meta">
+                      <span class="player-name">{result.player?.name ?? 'Unknown player'}</span>
+                    </div>
+                  </div>
+                  <span class="col-points">{result.points}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+  </section>
+</BaseLayout>
+
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --border-subtle: #e5e7eb;
+    --text-main: #111827;
+    --text-subtle: #6b7280;
+    --accent: #14b8a6;
+    --chip-upcoming-bg: #fef3c7;
+    --chip-upcoming-text: #92400e;
+    --chip-in-progress-bg: #14b8a6;
+    --chip-in-progress-text: #ffffff;
+    --chip-completed-bg: #f3f4f6;
+    --chip-completed-text: #6b7280;
+  }
+
+  .page {
+    margin: 0;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+      sans-serif;
+    background: var(--page-bg);
+    color: var(--text-main);
+  }
+
+  .shell {
+    padding: 0;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 1rem 0 1rem 1rem;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+  }
+
+  .back-button:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .card-header-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .card-header-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-start;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.25rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+
+  .title {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+  }
+
+  .dates {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+  }
+
+  .table-head {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 2.5fr) 1fr;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-subtle);
+    background: #f9fafb;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 2.5fr) 1fr;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+    align-items: center;
+  }
+
+  .row:nth-child(odd) {
+    background: #f9fafb;
+  }
+
+  .row:nth-child(even) {
+    background: #ffffff;
+  }
+
+  .col-pos {
+    font-weight: 600;
+    color: var(--text-subtle);
+  }
+
+  .col-player {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .player-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .player-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .col-points {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #eef2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4f46e5;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .chip-upcoming {
+    background: var(--chip-upcoming-bg);
+    color: var(--chip-upcoming-text);
+  }
+
+  .chip-in-progress {
+    background: var(--chip-in-progress-bg);
+    color: var(--chip-in-progress-text);
+    box-shadow: 0 2px 4px rgba(20, 184, 166, 0.2);
+  }
+
+  .chip-completed {
+    background: var(--chip-completed-bg);
+    color: var(--chip-completed-text);
+  }
+
+  .state {
+    padding: 1.5rem 1.25rem 1.75rem;
+    font-size: 0.9rem;
+    color: var(--text-subtle);
+  }
+
+  .state-error {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .state-detail {
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+  }
+
+  .empty-state {
+    padding: 3rem 1.25rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .empty-state-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .empty-state-text {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-subtle);
+    max-width: 360px;
+  }
+
+  @media (min-width: 768px) {
+    .shell {
+      padding: 1rem;
+      max-width: calc(100% - 2rem);
+    }
+
+    .back-button {
+      margin-left: 0;
+    }
+
+    .card {
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-header {
+      padding-inline: 1.75rem;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .table-head,
+    .row,
+    .empty-state {
+      padding-inline: 1.75rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .shell {
+      max-width: calc(1200px - 2rem);
+    }
+  }
+</style>
