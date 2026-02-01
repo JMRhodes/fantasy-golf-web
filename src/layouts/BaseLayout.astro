@@ -1,7 +1,7 @@
 ---
-import { ViewTransitions } from 'astro:transitions';
-import Navigation from '../components/Navigation.astro';
-import '../styles/page.css';
+import { ViewTransitions } from "astro:transitions";
+import Navigation from "../components/Navigation.astro";
+import "../styles/page.css";
 
 interface Props {
   title: string;
@@ -15,8 +15,7 @@ const { title, eyebrow, subtitle } = Astro.props;
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" href="/favicon-2.png" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
@@ -46,7 +45,11 @@ const { title, eyebrow, subtitle } = Astro.props;
   }
 
   html {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Text",
       sans-serif;
   }
 
