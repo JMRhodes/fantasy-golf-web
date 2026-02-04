@@ -1,6 +1,6 @@
 ---
-import { fetchGraphQL } from '../lib/graphql';
-import BaseLayout from '../layouts/BaseLayout.astro';
+import { fetchGraphQL } from "../lib/graphql";
+import BaseLayout from "../layouts/BaseLayout.astro";
 
 const GET_TOURNAMENTS = `
   query GetAllTournaments {
@@ -9,8 +9,9 @@ const GET_TOURNAMENTS = `
       name
       description
       status
-      start_date
-      end_date
+      avatarUrl
+      startDate
+      endDate
     }
   }
 `;
@@ -19,9 +20,10 @@ interface Tournament {
   id: string;
   name: string;
   description?: string | null;
-  status: 'UPCOMING' | 'IN-PROGRESS' | 'COMPLETED';
-  start_date: string;
-  end_date: string;
+  status: "UPCOMING" | "IN-PROGRESS" | "COMPLETED";
+  avatarUrl?: string | null;
+  startDate: string;
+  endDate: string;
 }
 
 interface GetTournamentsResponse {
@@ -31,8 +33,9 @@ interface GetTournamentsResponse {
 interface UiTournamentRow {
   id: string;
   name: string;
+  avatarUrl?: string;
   statusLabel: string;
-  statusTone: 'upcoming' | 'in-progress' | 'completed';
+  statusTone: "upcoming" | "in-progress" | "completed";
   dateRange: string;
 }
 
@@ -44,20 +47,20 @@ function formatDateRange(start: string, end: string): string {
   const endDate = new Date(end);
 
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    return 'TBD';
+    return "TBD";
   }
 
   const sameMonth = startDate.getMonth() === endDate.getMonth();
   const sameYear = startDate.getFullYear() === endDate.getFullYear();
 
-  const monthFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
+  const monthFormatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
   });
 
-  const fullFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  const fullFormatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 
   if (sameMonth && sameYear) {
@@ -71,20 +74,22 @@ function formatDateRange(start: string, end: string): string {
   return `${fullFormatter.format(startDate)} – ${fullFormatter.format(endDate)}`;
 }
 
-function mapStatus(status: Tournament['status']): {
+function mapStatus(status: Tournament["status"]): {
   label: string;
-  tone: UiTournamentRow['statusTone'];
+  tone: UiTournamentRow["statusTone"];
 } {
   switch (status) {
-    case 'UPCOMING':
-      return { label: 'Upcoming', tone: 'upcoming' };
-    case 'IN-PROGRESS':
-      return { label: 'In progress', tone: 'in-progress' };
-    case 'COMPLETED':
+    case "UPCOMING":
+      return { label: "Upcoming", tone: "upcoming" };
+    case "IN-PROGRESS":
+      return { label: "In progress", tone: "in-progress" };
+    case "COMPLETED":
     default:
-      return { label: 'Completed', tone: 'completed' };
+      return { label: "Completed", tone: "completed" };
   }
 }
+
+const bucketUrl = import.meta.env.PUBLIC_BUCKET_URL || "";
 
 try {
   const data = await fetchGraphQL<GetTournamentsResponse>(GET_TOURNAMENTS);
@@ -96,91 +101,111 @@ try {
     return {
       id: tournament.id,
       name: tournament.name,
+      avatarUrl: tournament.avatarUrl
+        ? `${bucketUrl}/tournaments/${tournament.avatarUrl}`
+        : undefined,
       statusLabel: status.label,
       statusTone: status.tone,
       dateRange: formatDateRange(
-        tournament.start_date as unknown as string,
-        tournament.end_date as unknown as string,
+        tournament.startDate as unknown as string,
+        tournament.endDate as unknown as string,
       ),
     };
   });
 } catch (err) {
-  error = err instanceof Error ? err.message : 'Failed to load tournaments.';
+  error = err instanceof Error ? err.message : "Failed to load tournaments.";
 }
 ---
 
 <BaseLayout title="Tournaments">
   <section class="card">
-        <header class="card-header">
-          <div class="card-header-main">
-            <p class="eyebrow">Schedule</p>
-            <h1 class="title">Tournaments</h1>
-            <p class="subtitle">
-              Browse all fantasy tournaments and open their leaderboards.
-            </p>
+    <header class="card-header">
+      <div class="card-header-main">
+        <p class="eyebrow">Schedule</p>
+        <h1 class="title">Tournaments</h1>
+        <p class="subtitle">
+          Browse all fantasy tournaments and open their leaderboards.
+        </p>
+      </div>
+    </header>
+
+    {
+      error && (
+        <div class="state state-error">
+          <p>We couldn't load tournaments.</p>
+          <p class="state-detail">{error}</p>
+        </div>
+      )
+    }
+
+    {
+      !error && rows.length === 0 && (
+        <div class="state">
+          <p>No tournaments yet.</p>
+          <p class="state-detail">
+            Create a tournament in the app to see it appear here.
+          </p>
+        </div>
+      )
+    }
+
+    {
+      !error && rows.length > 0 && (
+        <div class="table">
+          <div class="table-head">
+            <span class="col-name">Tournament</span>
+            <span class="col-dates">Dates</span>
+            <span class="col-status">Status</span>
+            <span class="col-link" aria-hidden="true" />
           </div>
-        </header>
 
-        {error && (
-          <div class="state state-error">
-            <p>We couldn't load tournaments.</p>
-            <p class="state-detail">{error}</p>
-          </div>
-        )}
-
-        {!error && rows.length === 0 && (
-          <div class="state">
-            <p>No tournaments yet.</p>
-            <p class="state-detail">
-              Create a tournament in the app to see it appear here.
-            </p>
-          </div>
-        )}
-
-        {!error && rows.length > 0 && (
-          <div class="table">
-            <div class="table-head">
-              <span class="col-name">Tournament</span>
-              <span class="col-dates">Dates</span>
-              <span class="col-status">Status</span>
-              <span class="col-link" aria-hidden="true"></span>
-            </div>
-
-            <ul class="rows" aria-label="Tournaments list">
-              {rows.map((row) => (
-                <li class="row">
-                  <a class="row-link" href={`/tournaments/${row.id}`}>
-                    <div class="col-name">
-                      <div class="avatar" aria-hidden="true">
-                        {row.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div class="tournament-meta">
-                        <span class="tournament-name">{row.name}</span>
-                      </div>
+          <ul class="rows" aria-label="Tournaments list">
+            {rows.map((row) => (
+              <li class="row">
+                <a class="row-link" href={`/tournaments/${row.id}`}>
+                  <div class="col-name">
+                    <div class="avatar" aria-hidden="true">
+                      {row.avatarUrl ? (
+                        <img
+                          src={row.avatarUrl}
+                          alt=""
+                          width="32"
+                          height="32"
+                        />
+                      ) : (
+                        <span class="avatar-initials">
+                          {row.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
                     </div>
+                    <div class="tournament-meta">
+                      <span class="tournament-name">{row.name}</span>
+                    </div>
+                  </div>
 
-                    <span class="col-dates">{row.dateRange}</span>
+                  <span class="col-dates">{row.dateRange}</span>
 
-                    <span
-                      class:list={{
-                        'chip': true,
-                        'chip-upcoming': row.statusTone === 'upcoming',
-                        'chip-in-progress': row.statusTone === 'in-progress',
-                        'chip-completed': row.statusTone === 'completed',
-                      }}
-                    >
-                      {row.statusLabel}
-                    </span>
+                  <span
+                    class:list={{
+                      chip: true,
+                      "chip-upcoming": row.statusTone === "upcoming",
+                      "chip-in-progress": row.statusTone === "in-progress",
+                      "chip-completed": row.statusTone === "completed",
+                    }}
+                  >
+                    {row.statusLabel}
+                  </span>
 
-                    <span class="col-link" aria-hidden="true">
-                      <span class="chevron">›</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                  <span class="col-link" aria-hidden="true">
+                    <span class="chevron">›</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
   </section>
 </BaseLayout>
 
@@ -204,7 +229,11 @@ try {
   .page {
     margin: 0;
     min-height: 100vh;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Text",
       sans-serif;
     background: var(--page-bg);
     color: var(--text-main);
@@ -348,6 +377,7 @@ try {
     width: 32px;
     height: 32px;
     border-radius: 999px;
+    overflow: hidden;
     background: #eef2ff;
     display: flex;
     align-items: center;
@@ -406,7 +436,9 @@ try {
 
     .card {
       border-radius: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        0 2px 4px rgba(0, 0, 0, 0.04);
     }
 
     .card-header {

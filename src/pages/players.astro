@@ -1,6 +1,6 @@
 ---
-import { fetchGraphQL } from '../lib/graphql';
-import BaseLayout from '../layouts/BaseLayout.astro';
+import { fetchGraphQL } from "../lib/graphql";
+import BaseLayout from "../layouts/BaseLayout.astro";
 
 const GET_PLAYERS = `
   query GetAllPlayers {
@@ -33,7 +33,7 @@ try {
   const data = await fetchGraphQL<GetPlayersResponse>(GET_PLAYERS);
   players = data.getAllPlayers ?? [];
 } catch (err) {
-  error = err instanceof Error ? err.message : 'Failed to load players.';
+  error = err instanceof Error ? err.message : "Failed to load players.";
 }
 ---
 
@@ -111,7 +111,7 @@ try {
                   <div class="avatar" aria-hidden="true">
                     {player.pgaId ? (
                       <img
-                        src={`https://pga-tour-res.cloudinary.com/image/upload/c_thumb,g_face,z_0.7,q_auto,f_auto,dpr_2.0,w_80,h_80,b_rgb:F2F2F2,d_stub:default_avatar_light.webp/headshots_${player.pgaId}`}
+                        src="https://s3-public-presigner-develop-10b9.up.railway.app/players/headshots_46046.webp"
                         alt=""
                         width="32"
                         height="32"
@@ -160,7 +160,7 @@ try {
       system-ui,
       -apple-system,
       BlinkMacSystemFont,
-      'SF Pro Text',
+      "SF Pro Text",
       sans-serif;
     background: var(--page-bg);
     color: var(--text-main);
@@ -394,9 +394,9 @@ try {
 
 <script>
   function initPlayerSearch() {
-    const form = document.querySelector('.card-header-actions');
-    const input = document.getElementById('player-search');
-    const rows = Array.from(document.querySelectorAll('[data-player-row]'));
+    const form = document.querySelector(".card-header-actions");
+    const input = document.getElementById("player-search");
+    const rows = Array.from(document.querySelectorAll("[data-player-row]"));
 
     if (!(input instanceof HTMLInputElement)) return;
 
@@ -405,38 +405,38 @@ try {
 
       rows.forEach((row) => {
         if (!(row instanceof HTMLElement)) return;
-        const playerName = (row.dataset.playerName || '').toLowerCase();
+        const playerName = (row.dataset.playerName || "").toLowerCase();
         const matches = !term || playerName.includes(term);
 
         if (matches) {
-          row.style.display = '';
+          row.style.display = "";
         } else {
-          row.style.display = 'none';
+          row.style.display = "none";
         }
       });
     }
 
     // Initialize from URL ?q=
     const params = new URLSearchParams(window.location.search);
-    const initial = params.get('q') || '';
+    const initial = params.get("q") || "";
     input.value = initial;
     applyFilter(initial);
 
-    input.addEventListener('input', (event) => {
+    input.addEventListener("input", (event) => {
       const value = event.target.value;
       applyFilter(value);
 
       const url = new URL(window.location.href);
       if (value) {
-        url.searchParams.set('q', value);
+        url.searchParams.set("q", value);
       } else {
-        url.searchParams.delete('q');
+        url.searchParams.delete("q");
       }
-      window.history.replaceState({}, '', url.toString());
+      window.history.replaceState({}, "", url.toString());
     });
 
     if (form instanceof HTMLFormElement) {
-      form.addEventListener('submit', (event) => {
+      form.addEventListener("submit", (event) => {
         event.preventDefault();
         applyFilter(input.value);
       });
@@ -447,5 +447,5 @@ try {
   initPlayerSearch();
 
   // Re-initialize after view transitions
-  document.addEventListener('astro:page-load', initPlayerSearch);
+  document.addEventListener("astro:page-load", initPlayerSearch);
 </script>
