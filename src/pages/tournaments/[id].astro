@@ -1,53 +1,33 @@
 ---
-import { fetchGraphQL } from '../../lib/graphql';
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import { fetchGraphQL } from "../../lib/graphql";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const GET_TOURNAMENT = `
-  query GetTournament($id: ID!) {
-    getTournament(id: $id) {
+  query GetTournament($id: String!) {
+    getTournamentById(id: $id) {
       id
       name
       description
       status
-      start_date
-      end_date
-      results {
-        id
-        position
-        points
-        player {
-          id
-          name
-        }
-      }
+      avatarUrl
+      startDate
+      endDate
     }
   }
 `;
-
-interface Player {
-  id: string;
-  name: string;
-}
-
-interface Result {
-  id: string;
-  position: string | null;
-  points: number;
-  player: Player;
-}
 
 interface Tournament {
   id: string;
   name: string;
   description?: string | null;
-  status: 'UPCOMING' | 'IN-PROGRESS' | 'COMPLETED';
-  start_date: string;
-  end_date: string;
-  results?: Result[] | null;
+  status: "UPCOMING" | "IN-PROGRESS" | "COMPLETED";
+  avatarUrl?: string | null;
+  startDate: string;
+  endDate: string;
 }
 
 interface GetTournamentResponse {
-  getTournament: Tournament;
+  getTournamentById: Tournament;
 }
 
 interface GetTournamentIdsResponse {
@@ -64,14 +44,15 @@ export async function getStaticPaths() {
   `;
 
   try {
-    const data = await fetchGraphQL<GetTournamentIdsResponse>(GET_TOURNAMENT_IDS);
+    const data =
+      await fetchGraphQL<GetTournamentIdsResponse>(GET_TOURNAMENT_IDS);
     const tournaments = data.getAllTournaments ?? [];
 
     return tournaments.map((tournament) => ({
       params: { id: tournament.id },
     }));
   } catch (error) {
-    console.error('Error fetching tournament paths:', error);
+    console.error("Error fetching tournament paths:", error);
     return [];
   }
 }
@@ -86,20 +67,20 @@ function formatDateRange(start: string, end: string): string {
   const endDate = new Date(end);
 
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    return 'TBD';
+    return "TBD";
   }
 
   const sameMonth = startDate.getMonth() === endDate.getMonth();
   const sameYear = startDate.getFullYear() === endDate.getFullYear();
 
-  const monthFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
+  const monthFormatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
   });
 
-  const fullFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  const fullFormatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 
   if (sameMonth && sameYear) {
@@ -113,128 +94,133 @@ function formatDateRange(start: string, end: string): string {
   return `${fullFormatter.format(startDate)} – ${fullFormatter.format(endDate)}`;
 }
 
-function mapStatus(status: Tournament['status']): {
+function mapStatus(status: Tournament["status"]): {
   label: string;
-  tone: 'upcoming' | 'in-progress' | 'completed';
+  tone: "upcoming" | "in-progress" | "completed";
 } {
   switch (status) {
-    case 'UPCOMING':
-      return { label: 'Upcoming', tone: 'upcoming' };
-    case 'IN-PROGRESS':
-      return { label: 'In progress', tone: 'in-progress' };
-    case 'COMPLETED':
+    case "UPCOMING":
+      return { label: "Upcoming", tone: "upcoming" };
+    case "IN-PROGRESS":
+      return { label: "In progress", tone: "in-progress" };
+    case "COMPLETED":
     default:
-      return { label: 'Completed', tone: 'completed' };
+      return { label: "Completed", tone: "completed" };
   }
 }
+
+const bucketUrl = import.meta.env.PUBLIC_BUCKET_URL || "";
 
 try {
   const data = await fetchGraphQL<GetTournamentResponse>(GET_TOURNAMENT, {
     id,
   });
-  tournament = data.getTournament ?? null;
+  tournament = data.getTournamentById ?? null;
 } catch (err) {
-  error = err instanceof Error ? err.message : 'Failed to load tournament.';
+  error = err instanceof Error ? err.message : "Failed to load tournament.";
 }
 ---
 
-<BaseLayout title={tournament ? tournament.name : 'Tournament'}>
+<BaseLayout title={tournament ? tournament.name : "Tournament"}>
   <a href="/tournaments" class="back-button" aria-label="Back to tournaments">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-      </a>
-      <section class="card">
-        <header class="card-header">
-          <div class="card-header-main">
-            <p class="eyebrow">Tournament</p>
-            <h1 class="title">
-              {tournament ? tournament.name : 'Tournament details'}
-            </h1>
-            {tournament && (
-              <p class="subtitle">
-                {tournament.description || 'Overview and results for this tournament.'}
-              </p>
-            )}
-            {!tournament && !error && (
-              <p class="subtitle">Loading tournament…</p>
-            )}
-          </div>
-          {tournament && (
-            <div class="card-header-aside">
-              <span
-                class:list={{
-                  'chip': true,
-                  'chip-upcoming': mapStatus(tournament.status).tone === 'upcoming',
-                  'chip-in-progress': mapStatus(tournament.status).tone === 'in-progress',
-                  'chip-completed': mapStatus(tournament.status).tone === 'completed',
-                }}
-              >
-                {mapStatus(tournament.status).label}
-              </span>
-              <p class="dates">{formatDateRange(
-                tournament.start_date as unknown as string,
-                tournament.end_date as unknown as string,
-              )}</p>
-            </div>
-          )}
-        </header>
-
-        {error && (
-          <div class="state state-error">
-            <p>We couldn't load this tournament.</p>
-            <p class="state-detail">{error}</p>
-          </div>
-        )}
-
-        {!error && !tournament && (
-          <div class="state">
-            <p>Loading tournament…</p>
-          </div>
-        )}
-
-        {!error && tournament && (!tournament.results || tournament.results.length === 0) && (
-          <div class="empty-state">
-            <div class="empty-state-icon" aria-hidden="true">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                <path d="M9 12h6m-6 4h6" />
-              </svg>
-            </div>
-            <h2 class="empty-state-title">No results yet</h2>
-            <p class="empty-state-text">
-              Results will be displayed here once they're added to this tournament. Check back after the tournament concludes.
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M19 12H5M12 19l-7-7 7-7"></path>
+    </svg>
+  </a>
+  <section class="card">
+    <header class="card-header">
+      <div class="card-header-main">
+        <p class="eyebrow">Tournament</p>
+        <h1 class="title">
+          {tournament ? tournament.name : "Tournament details"}
+        </h1>
+        {
+          tournament && (
+            <p class="subtitle">
+              {tournament.description ||
+                "Overview and results for this tournament."}
+            </p>
+          )
+        }
+        {!tournament && !error && <p class="subtitle">Loading tournament…</p>}
+      </div>
+      {
+        tournament && (
+          <div class="card-header-aside">
+            <span
+              class:list={{
+                chip: true,
+                "chip-upcoming":
+                  mapStatus(tournament.status).tone === "upcoming",
+                "chip-in-progress":
+                  mapStatus(tournament.status).tone === "in-progress",
+                "chip-completed":
+                  mapStatus(tournament.status).tone === "completed",
+              }}
+            >
+              {mapStatus(tournament.status).label}
+            </span>
+            <p class="dates">
+              {formatDateRange(
+                tournament.startDate as unknown as string,
+                tournament.endDate as unknown as string,
+              )}
             </p>
           </div>
-        )}
+        )
+      }
+    </header>
 
-        {!error && tournament && tournament.results && tournament.results.length > 0 && (
-          <div class="table">
-            <div class="table-head">
-              <span class="col-pos">Pos</span>
-              <span class="col-player">Player</span>
-              <span class="col-points">Points</span>
-            </div>
+    {
+      error && (
+        <div class="state state-error">
+          <p>We couldn't load this tournament.</p>
+          <p class="state-detail">{error}</p>
+        </div>
+      )
+    }
 
-            <ul class="rows" aria-label="Tournament results">
-              {tournament.results.map((result) => (
-                <li class="row">
-                  <span class="col-pos">{result.position ?? '-'}</span>
-                  <div class="col-player">
-                    <div class="avatar" aria-hidden="true">
-                      {result.player?.name?.charAt(0).toUpperCase() ?? '?'}
-                    </div>
-                    <div class="player-meta">
-                      <span class="player-name">{result.player?.name ?? 'Unknown player'}</span>
-                    </div>
-                  </div>
-                  <span class="col-points">{result.points}</span>
-                </li>
-              ))}
-            </ul>
+    {
+      !error && !tournament && (
+        <div class="state">
+          <p>Loading tournament…</p>
+        </div>
+      )
+    }
+
+    {
+      !error && tournament && (
+        <div class="empty-state">
+          <div class="empty-state-icon" aria-hidden="true">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <path d="M9 12h6m-6 4h6" />
+            </svg>
           </div>
-        )}
-
+          <h2 class="empty-state-title">No results yet</h2>
+          <p class="empty-state-text">
+            Results will be displayed here once they're added to this
+            tournament. Check back after the tournament concludes.
+          </p>
+        </div>
+      )
+    }
   </section>
 </BaseLayout>
 
@@ -258,7 +244,11 @@ try {
   .page {
     margin: 0;
     min-height: 100vh;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Text",
       sans-serif;
     background: var(--page-bg);
     color: var(--text-main);
@@ -510,7 +500,9 @@ try {
 
     .card {
       border-radius: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        0 2px 4px rgba(0, 0, 0, 0.04);
     }
 
     .card-header {
