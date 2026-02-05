@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@astrojs/node": "^9.5.2",
-    "astro": "^5.16.15"
+    "astro": "^5.16.15",
+    "astro-preload": "^1.1.2"
   }
 }

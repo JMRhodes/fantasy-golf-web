@@ -680,6 +680,11 @@ array-iterate@^2.0.0:
   resolved "https://registry.npmjs.org/array-iterate/-/array-iterate-2.0.1.tgz"
   integrity sha512-I1jXZMjAgCMmxT4qxXfPXa6SthSoE8h6gkSI9BGGNv8mP8G/v0blc+qFnZu6K42vTOiuME596QaLO0TP3Lk0xg==
 
+astro-preload@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/astro-preload/-/astro-preload-1.1.2.tgz#501844e4c368b1447d5d8a13e2dea7355765c01d"
+  integrity sha512-96UHdATRp/K8iVysylYu0V5QMD3FXBqqj2+cUwHOmc0/+lstY5Xnb+A5UgmecbrfHpwMws5SQaOYZ1c63cQu/A==
+
 astro@^5.16.15:
   version "5.16.15"
   resolved "https://registry.npmjs.org/astro/-/astro-5.16.15.tgz"

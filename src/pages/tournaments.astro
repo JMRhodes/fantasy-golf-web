@@ -1,6 +1,7 @@
 ---
 import { fetchGraphQL } from "../lib/graphql";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { Image } from "astro-preload/components";
 
 const GET_TOURNAMENTS = `
   query GetAllTournaments {
@@ -166,8 +167,8 @@ try {
                   <div class="col-name">
                     <div class="avatar" aria-hidden="true">
                       {row.avatarUrl ? (
-                        <img
-                          src={row.avatarUrl}
+                        <Image
+                          url={row.avatarUrl}
                           alt=""
                           width="32"
                           height="32"

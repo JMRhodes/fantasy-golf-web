@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro-preload/components";
+
 interface Props {
   name: string;
   pgaId?: number | null;
@@ -22,8 +24,8 @@ const pgaAvatarUrl = pgaId
 
 {
   pgaAvatarUrl ? (
-    <img
-      src={pgaAvatarUrl}
+    <Image
+      url={pgaAvatarUrl}
       alt=""
       width={size}
       height={size}
