@@ -1,6 +1,7 @@
 ---
 import { fetchGraphQL } from "../../lib/graphql";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import PlayerAvatar from "../../components/PlayerAvatar.astro";
 
 const GET_TOURNAMENT = `
   query GetTournament($id: String!) {
@@ -12,9 +13,32 @@ const GET_TOURNAMENT = `
       avatarUrl
       startDate
       endDate
+      results {
+        id
+        position
+        points
+        player {
+          id
+          name
+          pgaId
+        }
+      }
     }
   }
 `;
+
+interface Player {
+  id: string;
+  name: string;
+  pgaId?: number | null;
+}
+
+interface Result {
+  id: string;
+  position: string;
+  points: number;
+  player: Player;
+}
 
 interface Tournament {
   id: string;
@@ -24,6 +48,7 @@ interface Tournament {
   avatarUrl?: string | null;
   startDate: string;
   endDate: string;
+  results?: Result[];
 }
 
 interface GetTournamentResponse {
@@ -109,7 +134,6 @@ function mapStatus(status: Tournament["status"]): {
   }
 }
 
-const bucketUrl = import.meta.env.PUBLIC_BUCKET_URL || "";
 
 try {
   const data = await fetchGraphQL<GetTournamentResponse>(GET_TOURNAMENT, {
@@ -198,7 +222,33 @@ try {
     }
 
     {
-      !error && tournament && (
+      !error && tournament && tournament.results && tournament.results.length > 0 && (
+        <>
+          <div class="table-head">
+            <span>Pos</span>
+            <span>Player</span>
+            <span style="text-align: right;">Points</span>
+          </div>
+          <ul class="rows">
+            {tournament.results.map((result) => (
+              <li class="row">
+                <span class="col-pos">{result.position}</span>
+                <span class="col-player">
+                  <PlayerAvatar name={result.player.name} pgaId={result.player.pgaId} size={32} />
+                  <span class="player-meta">
+                    <span class="player-name">{result.player.name}</span>
+                  </span>
+                </span>
+                <span class="col-points">{result.points}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
+
+    {
+      !error && tournament && (!tournament.results || tournament.results.length === 0) && (
         <div class="empty-state">
           <div class="empty-state-icon" aria-hidden="true">
             <svg

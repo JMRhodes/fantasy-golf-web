@@ -2,6 +2,7 @@
 import { fetchGraphQL } from "../lib/graphql";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PromoBanner from "../components/PromoBanner.astro";
+import PlayerAvatar from "../components/PlayerAvatar.astro";
 
 const GET_TEAMS = `
   query GetLeaderboardData {
@@ -230,34 +231,15 @@ try {
                       aria-label={`Players for ${row.teamName}`}
                     >
                       {row.players.length > 0
-                        ? row.players.map((player) => {
-                            const initials = player.name
-                              .split(" ")
-                              .map((part) => part.charAt(0))
-                              .slice(0, 2)
-                              .join("")
-                              .toUpperCase();
-                            return (
-                              <span
-                                class="player-dot"
-                                data-tooltip={player.name}
-                                aria-label={player.name}
-                              >
-                                {player.pgaId ? (
-                                  <img
-                                    src={`https://pga-tour-res.cloudinary.com/image/upload/c_thumb,g_face,z_0.7,q_auto,f_auto,dpr_2.0,w_80,h_80,b_rgb:F2F2F2,d_stub:default_avatar_light.webp/headshots_${player.pgaId}`}
-                                    alt=""
-                                    width="28"
-                                    height="28"
-                                    loading="lazy"
-                                    style="border-radius: 999px;"
-                                  />
-                                ) : (
-                                  initials
-                                )}
-                              </span>
-                            );
-                          })
+                        ? row.players.map((player) => (
+                            <span
+                              class="player-dot"
+                              data-tooltip={player.name}
+                              aria-label={player.name}
+                            >
+                              <PlayerAvatar name={player.name} pgaId={player.pgaId} size={28} />
+                            </span>
+                          ))
                         : Array.from({ length: 4 }).map((_, i) => (
                             <span
                               class="player-dot player-dot-placeholder"

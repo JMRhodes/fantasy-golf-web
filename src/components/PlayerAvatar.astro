@@ -1,0 +1,61 @@
+---
+interface Props {
+  name: string;
+  pgaId?: number | null;
+  size?: number;
+  class?: string;
+}
+
+const { name, pgaId, size = 32, class: className } = Astro.props;
+
+const initials = name
+  .split(" ")
+  .map((part) => part.charAt(0))
+  .slice(0, 2)
+  .join("")
+  .toUpperCase();
+
+const pgaAvatarUrl = pgaId
+  ? `https://pga-tour-res.cloudinary.com/image/upload/c_thumb,g_face,z_0.7,q_auto,f_auto,dpr_2.0,w_80,h_80,b_rgb:F2F2F2,d_stub:default_avatar_light.webp/headshots_${pgaId}`
+  : null;
+---
+
+{
+  pgaAvatarUrl ? (
+    <img
+      src={pgaAvatarUrl}
+      alt=""
+      width={size}
+      height={size}
+      loading="lazy"
+      class:list={["player-avatar", "player-avatar-image", className]}
+    />
+  ) : (
+    <span
+      class:list={["player-avatar", "player-avatar-initials", className]}
+      style={`width: ${size}px; height: ${size}px; font-size: ${size * 0.4}px;`}
+    >
+      {initials}
+    </span>
+  )
+}
+
+<style>
+  .player-avatar {
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  .player-avatar-image {
+    object-fit: cover;
+  }
+
+  .player-avatar-initials {
+    background: #eef2ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #4f46e5;
+  }
+</style>

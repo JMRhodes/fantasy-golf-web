@@ -1,6 +1,7 @@
 ---
 import { fetchGraphQL } from "../lib/graphql";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import PlayerAvatar from "../components/PlayerAvatar.astro";
 
 const GET_PLAYERS = `
   query GetAllPlayers {
@@ -108,20 +109,7 @@ try {
             {players.map((player) => (
               <li class="row" data-player-row data-player-name={player.name}>
                 <div class="col-thumbnail">
-                  <div class="avatar" aria-hidden="true">
-                    {player.pgaId ? (
-                      <img
-                        src={`https://pga-tour-res.cloudinary.com/image/upload/c_thumb,g_face,z_0.7,q_auto,f_auto,dpr_2.0,w_80,h_80,b_rgb:F2F2F2,d_stub:default_avatar_light.webp/headshots_${player.pgaId}`}
-                        alt=""
-                        width="32"
-                        height="32"
-                        loading="lazy"
-                        style="border-radius: 999px;"
-                      />
-                    ) : (
-                      player.name.charAt(0).toUpperCase()
-                    )}
-                  </div>
+                  <PlayerAvatar name={player.name} pgaId={player.pgaId} size={32} />
                 </div>
                 <div class="col-name">
                   <span class="player-name">{player.name}</span>
@@ -302,19 +290,6 @@ try {
   .col-thumbnail {
     display: flex;
     align-items: center;
-  }
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    background: #eef2ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #4f46e5;
   }
 
   .col-name {
