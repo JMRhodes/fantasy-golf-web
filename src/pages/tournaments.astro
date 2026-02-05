@@ -2,6 +2,7 @@
 import { fetchGraphQL } from "../lib/graphql";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { Image } from "astro-preload/components";
+import { undefined } from "astro:schema";
 
 const GET_TOURNAMENTS = `
   query GetAllTournaments {
@@ -102,9 +103,7 @@ try {
     return {
       id: tournament.id,
       name: tournament.name,
-      avatarUrl: tournament.avatarUrl
-        ? `${bucketUrl}/tournaments/${tournament.avatarUrl}`
-        : undefined,
+      avatarUrl: tournament.avatarUrl ?? undefined,
       statusLabel: status.label,
       statusTone: status.tone,
       dateRange: formatDateRange(
