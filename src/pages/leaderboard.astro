@@ -1,14 +1,14 @@
 ---
-import { fetchGraphQL } from '../lib/graphql';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import PromoBanner from '../components/PromoBanner.astro';
+import { fetchGraphQL } from "../lib/graphql";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PromoBanner from "../components/PromoBanner.astro";
 
 const GET_TEAMS = `
   query GetLeaderboardData {
     getAllTeams {
       id
       name
-      ownerId {
+      owner {
         id
         name
       }
@@ -29,7 +29,7 @@ interface Owner {
 interface Team {
   id: string;
   name: string | null;
-  ownerId: Owner | null;
+  owner: Owner | null;
   players: Player[] | null;
 }
 
@@ -52,12 +52,12 @@ interface LeaderboardRow {
 }
 
 const pastelPalette: { bg: string; fg: string }[] = [
-  { bg: '#fee2e2', fg: '#b91c1c' },
-  { bg: '#e0f2fe', fg: '#075985' },
-  { bg: '#ecfeff', fg: '#0e7490' },
-  { bg: '#fef3c7', fg: '#92400e' },
-  { bg: '#e0f2f1', fg: '#00695c' },
-  { bg: '#ede9fe', fg: '#5b21b6' },
+  { bg: "#fee2e2", fg: "#b91c1c" },
+  { bg: "#e0f2fe", fg: "#075985" },
+  { bg: "#ecfeff", fg: "#0e7490" },
+  { bg: "#fef3c7", fg: "#92400e" },
+  { bg: "#e0f2f1", fg: "#00695c" },
+  { bg: "#ede9fe", fg: "#5b21b6" },
 ];
 
 let rows: LeaderboardRow[] = [];
@@ -73,14 +73,14 @@ try {
     return {
       rank: index + 1,
       teamName: team.name ?? `Team ${index + 1}`,
-      ownerName: team.ownerId?.name ?? 'Unknown owner',
+      ownerName: team.owner?.name ?? "Unknown owner",
       avatarBg: palette.bg,
       avatarFg: palette.fg,
       players: team.players ?? [],
     };
   });
 } catch (err) {
-  error = err instanceof Error ? err.message : 'Failed to load leaderboard.';
+  error = err instanceof Error ? err.message : "Failed to load leaderboard.";
 }
 ---
 
@@ -159,8 +159,8 @@ try {
                 <li
                   class:list={{
                     row: true,
-                    'row-top10': row.rank <= 10,
-                    'row-first': row.rank === 1,
+                    "row-top10": row.rank <= 10,
+                    "row-first": row.rank === 1,
                   }}
                   data-team-row
                   data-team-name={row.teamName}
@@ -232,10 +232,10 @@ try {
                       {row.players.length > 0
                         ? row.players.map((player) => {
                             const initials = player.name
-                              .split(' ')
+                              .split(" ")
                               .map((part) => part.charAt(0))
                               .slice(0, 2)
-                              .join('')
+                              .join("")
                               .toUpperCase();
                             return (
                               <span
@@ -300,7 +300,7 @@ try {
       system-ui,
       -apple-system,
       BlinkMacSystemFont,
-      'SF Pro Text',
+      "SF Pro Text",
       sans-serif;
     background: var(--page-bg);
     color: var(--text-main);
@@ -615,9 +615,9 @@ try {
 
 <script>
   function initTeamSearch() {
-    const form = document.querySelector('.card-header-actions');
-    const input = document.getElementById('team-search');
-    const rows = Array.from(document.querySelectorAll('[data-team-row]'));
+    const form = document.querySelector(".card-header-actions");
+    const input = document.getElementById("team-search");
+    const rows = Array.from(document.querySelectorAll("[data-team-row]"));
 
     if (!(input instanceof HTMLInputElement)) return;
 
@@ -627,42 +627,42 @@ try {
 
       rows.forEach((row) => {
         if (!(row instanceof HTMLElement)) return;
-        const teamName = (row.dataset.teamName || '').toLowerCase();
+        const teamName = (row.dataset.teamName || "").toLowerCase();
         const matches = !term || teamName.includes(term);
 
         if (matches) {
-          row.style.display = '';
-          const rankEl = row.querySelector('[data-rank]');
+          row.style.display = "";
+          const rankEl = row.querySelector("[data-rank]");
           if (rankEl instanceof HTMLElement) {
             rankEl.textContent = String(visibleRank++);
           }
         } else {
-          row.style.display = 'none';
+          row.style.display = "none";
         }
       });
     }
 
     // Initialize from URL ?q=
     const params = new URLSearchParams(window.location.search);
-    const initial = params.get('q') || '';
+    const initial = params.get("q") || "";
     input.value = initial;
     applyFilter(initial);
 
-    input.addEventListener('input', (event) => {
+    input.addEventListener("input", (event) => {
       const value = event.target.value;
       applyFilter(value);
 
       const url = new URL(window.location.href);
       if (value) {
-        url.searchParams.set('q', value);
+        url.searchParams.set("q", value);
       } else {
-        url.searchParams.delete('q');
+        url.searchParams.delete("q");
       }
-      window.history.replaceState({}, '', url.toString());
+      window.history.replaceState({}, "", url.toString());
     });
 
     if (form instanceof HTMLFormElement) {
-      form.addEventListener('submit', (event) => {
+      form.addEventListener("submit", (event) => {
         event.preventDefault();
         applyFilter(input.value);
       });
@@ -673,5 +673,5 @@ try {
   initTeamSearch();
 
   // Re-initialize after view transitions
-  document.addEventListener('astro:page-load', initTeamSearch);
+  document.addEventListener("astro:page-load", initTeamSearch);
 </script>
