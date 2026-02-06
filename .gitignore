@@ -44,6 +44,7 @@ examples/**/env.d.ts
 *.code-workspace
 packages/astro/e2e/fixtures/cloudflare/.wrangler/deploy/config.json
 
-# Downloaded player images (automatically fetched via prebuild script)
-# Comment out the line below if you prefer to commit images to git
+# Downloaded images (automatically fetched via prebuild script)
+# Comment out the lines below if you prefer to commit images to git
 public/images/players/
+public/images/tournaments/

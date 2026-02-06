@@ -7,8 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "download-images": "node scripts/download-player-images.mjs",
-    "prebuild": "node scripts/download-player-images.mjs"
+    "download-images": "node scripts/download-assets.mjs",
+    "prebuild": "node scripts/download-assets.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.2",

@@ -1,0 +1,62 @@
+---
+interface Props {
+  id: string;
+  name: string;
+  avatarUrl?: string | null;
+  size?: number;
+  class?: string;
+}
+
+const { id, name, avatarUrl, size = 32, class: className } = Astro.props;
+
+const initials = name.charAt(0).toUpperCase();
+
+// Construct local image path from tournament ID and avatarUrl extension
+let localImagePath: string | null = null;
+if (avatarUrl) {
+  // Extract file extension from avatarUrl
+  const urlParts = avatarUrl.split('.');
+  const ext = urlParts[urlParts.length - 1].split('?')[0] || 'jpg';
+  localImagePath = `/images/tournaments/${id}.${ext}`;
+}
+---
+
+{
+  localImagePath ? (
+    <img
+      src={localImagePath}
+      alt={name}
+      width={size}
+      height={size}
+      loading="lazy"
+      onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
+      class:list={["tournament-avatar", "tournament-avatar-image", className]}
+    />
+  ) : null
+}
+<span
+  class:list={["tournament-avatar", "tournament-avatar-initials", className]}
+  style={`width: ${size}px; height: ${size}px; font-size: ${size * 0.4}px;${localImagePath ? ' display: none;' : ''}`}
+>
+  {initials}
+</span>
+
+<style>
+  .tournament-avatar {
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  .tournament-avatar-image {
+    object-fit: cover;
+  }
+
+  .tournament-avatar-initials {
+    background: #eef2ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #4f46e5;
+  }
+</style>
