@@ -4,11 +4,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PromoBanner from "../components/PromoBanner.astro";
 import PlayerAvatar from "../components/PlayerAvatar.astro";
 
-const GET_TEAMS = `
+const GET_LEADERBOARD = `
   query GetLeaderboardData {
-    getAllTeams {
+    leaderboard {
       id
       name
+      rank
+      totalPoints
       owner {
         id
         name
@@ -30,6 +32,8 @@ interface Owner {
 interface Team {
   id: string;
   name: string | null;
+  rank: number | null;
+  totalPoints: number | null;
   owner: Owner | null;
   players: Player[] | null;
 }
@@ -40,8 +44,8 @@ interface Player {
   pgaId?: number | null;
 }
 
-interface GetTeamsResponse {
-  getAllTeams: Team[];
+interface GetLeaderboardResponse {
+  leaderboard: Team[];
 }
 interface LeaderboardRow {
   rank: number;
@@ -50,6 +54,7 @@ interface LeaderboardRow {
   avatarBg: string;
   avatarFg: string;
   players: Player[];
+  totalPoints?: number;
 }
 
 const pastelPalette: { bg: string; fg: string }[] = [
@@ -65,19 +70,20 @@ let rows: LeaderboardRow[] = [];
 let error: string | null = null;
 
 try {
-  const data = await fetchGraphQL<GetTeamsResponse>(GET_TEAMS);
-  const teams = data.getAllTeams ?? [];
+  const data = await fetchGraphQL<GetLeaderboardResponse>(GET_LEADERBOARD);
+  const teams = data.leaderboard ?? [];
 
   rows = teams.map((team, index) => {
     const palette = pastelPalette[index % pastelPalette.length];
 
     return {
-      rank: index + 1,
+      rank: team.rank ?? 0,
       teamName: team.name ?? `Team ${index + 1}`,
       ownerName: team.owner?.name ?? "Unknown owner",
       avatarBg: palette.bg,
       avatarFg: palette.fg,
       players: team.players ?? [],
+      totalPoints: team.totalPoints ?? 0,
     };
   });
 } catch (err) {
@@ -166,44 +172,18 @@ try {
                   data-team-name={row.teamName}
                 >
                   <span class="col-rank" data-rank>
-                    {row.rank <= 3 ? (
+                    {row.rank === 1 ? (
                       <span class="rank-badge">
-                        {row.rank === 1 && (
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="#fbbf24"
-                            stroke="#f59e0b"
-                            stroke-width="1.5"
-                          >
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                          </svg>
-                        )}
-                        {row.rank === 2 && (
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="#cbd5e1"
-                            stroke="#94a3b8"
-                            stroke-width="1.5"
-                          >
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                          </svg>
-                        )}
-                        {row.rank === 3 && (
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="#fca5a5"
-                            stroke="#f87171"
-                            stroke-width="1.5"
-                          >
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                          </svg>
-                        )}
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="#fbbf24"
+                          stroke="#f59e0b"
+                          stroke-width="1.5"
+                        >
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
                       </span>
                     ) : (
                       row.rank
@@ -255,7 +235,7 @@ try {
                     </div>
                   </div>
 
-                  <span class="col-points">0</span>
+                  <span class="col-points">{row.totalPoints}</span>
                 </li>
               ))}
             </ul>
@@ -606,7 +586,6 @@ try {
 
     function applyFilter(value) {
       const term = value.trim().toLowerCase();
-      let visibleRank = 1;
 
       rows.forEach((row) => {
         if (!(row instanceof HTMLElement)) return;
@@ -615,10 +594,6 @@ try {
 
         if (matches) {
           row.style.display = "";
-          const rankEl = row.querySelector("[data-rank]");
-          if (rankEl instanceof HTMLElement) {
-            rankEl.textContent = String(visibleRank++);
-          }
         } else {
           row.style.display = "none";
         }

@@ -6,11 +6,12 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "download-images": "node scripts/download-player-images.mjs",
+    "prebuild": "node scripts/download-player-images.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.2",
-    "astro": "^5.16.15",
-    "astro-preload": "^1.1.2"
+    "astro": "^5.16.15"
   }
 }
