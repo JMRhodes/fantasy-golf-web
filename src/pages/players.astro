@@ -11,6 +11,7 @@ const GET_PLAYERS = `
       pgaId
       salary
       totalPoints
+      totalWins
     }
   }
 `;
@@ -21,6 +22,7 @@ interface Player {
   pgaId?: number;
   salary?: number;
   totalPoints: number;
+  totalWins: number;
 }
 
 interface GetPlayersResponse {
@@ -109,7 +111,11 @@ try {
             {players.map((player) => (
               <li class="row" data-player-row data-player-name={player.name}>
                 <div class="col-thumbnail">
-                  <PlayerAvatar name={player.name} pgaId={player.pgaId} size={32} />
+                  <PlayerAvatar
+                    name={player.name}
+                    pgaId={player.pgaId}
+                    size={32}
+                  />
                 </div>
                 <div class="col-name">
                   <span class="player-name">{player.name}</span>
@@ -120,7 +126,9 @@ try {
                   )}
                 </div>
                 <span class="col-points">{player.totalPoints}</span>
-                <span class="col-wins">—</span>
+                <span class="col-wins">
+                  {player.totalWins > 0 ? player.totalWins : "-"}
+                </span>
               </li>
             ))}
           </ul>
