@@ -61,16 +61,7 @@ function formatDateRange(start: string, end: string): string {
   const fullFormatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
   });
-
-  if (sameMonth && sameYear) {
-    return `${monthFormatter.format(startDate)} ${startDate.getDate()}–${endDate.getDate()}, ${startDate.getFullYear()}`;
-  }
-
-  if (sameYear) {
-    return `${fullFormatter.format(startDate)} – ${monthFormatter.format(endDate)} ${endDate.getDate()}`;
-  }
 
   return `${fullFormatter.format(startDate)} – ${fullFormatter.format(endDate)}`;
 }

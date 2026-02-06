@@ -105,16 +105,7 @@ function formatDateRange(start: string, end: string): string {
   const fullFormatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
   });
-
-  if (sameMonth && sameYear) {
-    return `${monthFormatter.format(startDate)} ${startDate.getDate()}–${endDate.getDate()}, ${startDate.getFullYear()}`;
-  }
-
-  if (sameYear) {
-    return `${fullFormatter.format(startDate)} – ${monthFormatter.format(endDate)} ${endDate.getDate()}`;
-  }
 
   return `${fullFormatter.format(startDate)} – ${fullFormatter.format(endDate)}`;
 }
@@ -133,7 +124,6 @@ function mapStatus(status: Tournament["status"]): {
       return { label: "Completed", tone: "completed" };
   }
 }
-
 
 try {
   const data = await fetchGraphQL<GetTournamentResponse>(GET_TOURNAMENT, {
@@ -222,54 +212,63 @@ try {
     }
 
     {
-      !error && tournament && tournament.results && tournament.results.length > 0 && (
-        <>
-          <div class="table-head">
-            <span>Pos</span>
-            <span>Player</span>
-            <span style="text-align: right;">Points</span>
-          </div>
-          <ul class="rows">
-            {tournament.results.map((result) => (
-              <li class="row">
-                <span class="col-pos">{result.position}</span>
-                <span class="col-player">
-                  <PlayerAvatar name={result.player.name} pgaId={result.player.pgaId} size={32} />
-                  <span class="player-meta">
-                    <span class="player-name">{result.player.name}</span>
+      !error &&
+        tournament &&
+        tournament.results &&
+        tournament.results.length > 0 && (
+          <>
+            <div class="table-head">
+              <span>Pos</span>
+              <span>Player</span>
+              <span style="text-align: right;">Points</span>
+            </div>
+            <ul class="rows">
+              {tournament.results.map((result) => (
+                <li class="row">
+                  <span class="col-pos">{result.position}</span>
+                  <span class="col-player">
+                    <PlayerAvatar
+                      name={result.player.name}
+                      pgaId={result.player.pgaId}
+                      size={32}
+                    />
+                    <span class="player-meta">
+                      <span class="player-name">{result.player.name}</span>
+                    </span>
                   </span>
-                </span>
-                <span class="col-points">{result.points}</span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )
+                  <span class="col-points">{result.points}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
     }
 
     {
-      !error && tournament && (!tournament.results || tournament.results.length === 0) && (
-        <div class="empty-state">
-          <div class="empty-state-icon" aria-hidden="true">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              <path d="M9 12h6m-6 4h6" />
-            </svg>
+      !error &&
+        tournament &&
+        (!tournament.results || tournament.results.length === 0) && (
+          <div class="empty-state">
+            <div class="empty-state-icon" aria-hidden="true">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path d="M9 12h6m-6 4h6" />
+              </svg>
+            </div>
+            <h2 class="empty-state-title">No results yet</h2>
+            <p class="empty-state-text">
+              Results will be displayed here once they're added to this
+              tournament. Check back after the tournament concludes.
+            </p>
           </div>
-          <h2 class="empty-state-title">No results yet</h2>
-          <p class="empty-state-text">
-            Results will be displayed here once they're added to this
-            tournament. Check back after the tournament concludes.
-          </p>
-        </div>
-      )
+        )
     }
   </section>
 </BaseLayout>
