@@ -152,7 +152,6 @@ try {
               <span class="col-team">Team</span>
               <span class="col-players">Players</span>
               <span class="col-points">Points</span>
-              <span class="col-wins">Wins</span>
             </div>
 
             <ul class="rows" aria-label="Team standings">
@@ -237,7 +236,11 @@ try {
                               data-tooltip={player.name}
                               aria-label={player.name}
                             >
-                              <PlayerAvatar name={player.name} pgaId={player.pgaId} size={28} />
+                              <PlayerAvatar
+                                name={player.name}
+                                pgaId={player.pgaId}
+                                size={28}
+                              />
                             </span>
                           ))
                         : Array.from({ length: 4 }).map((_, i) => (
@@ -253,7 +256,6 @@ try {
                   </div>
 
                   <span class="col-points">0</span>
-                  <span class="col-wins">0</span>
                 </li>
               ))}
             </ul>
@@ -389,7 +391,7 @@ try {
 
   .table-head {
     display: grid;
-    grid-template-columns: 2rem minmax(0, 2fr) 1.4fr 0.9fr 0.8fr;
+    grid-template-columns: 2rem minmax(0, 2.8fr) 1.4fr 0.9fr;
     padding: 0.75rem 1.25rem;
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -407,7 +409,7 @@ try {
 
   .row {
     display: grid;
-    grid-template-columns: 2rem minmax(0, 2fr) 1.4fr 0.9fr 0.8fr;
+    grid-template-columns: 2rem minmax(0, 2.8fr) 1.4fr 0.9fr;
     padding: 0.75rem 1.25rem;
     font-size: 0.85rem;
     align-items: center;
@@ -539,8 +541,7 @@ try {
     text-overflow: ellipsis;
   }
 
-  .col-points,
-  .col-wins {
+  .col-points {
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
